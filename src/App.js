@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import UserForm from "./components/UserForm"; // User input form
 import MatchingScreen from "./components/MatchingScreen"; // Matching screen
 import ChatScreen from "./components/ChatScreen"; // Chat UI
