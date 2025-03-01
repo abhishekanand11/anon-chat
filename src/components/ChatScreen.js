@@ -1,24 +1,11 @@
 import { useState, useEffect, useRef } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
 import { Client } from "@stomp/stompjs";
 
-const ChatScreen = () => {
+const ChatScreen = ({ chatId, userId }) => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const chatEndRef = useRef(null);
   const stompClientRef = useRef(null);
-
-  const location = useLocation();
-  const navigate = useNavigate();
-
-  // Extract chatId and user from location.state
-  const { chatId, user } = location.state || {};
-
-  if (!chatId || !user) {
-    console.warn("Chat ID or user missing! Redirecting...");
-    navigate("/"); // Redirect if accessed without a match
-    return null;
-  }
 
   // Initialize WebSocket Connection
   useEffect(() => {
@@ -87,9 +74,6 @@ const ChatScreen = () => {
   };  
 
   return (
-    <div>
-      <h2>Chat Room - {chatId}</h2>
-      <p>Chatting with {user.name}</p>
     <div className="flex flex-col h-screen bg-gradient-to-br from-blue-900 via-indigo-800 to-purple-900 p-4">
       <div className="flex-1 overflow-y-auto space-y-2 p-2">
         {messages.map((msg, index) => (
@@ -120,7 +104,6 @@ const ChatScreen = () => {
           Send
         </button>
       </div>
-    </div>
     </div>
   );
 };
