@@ -1,17 +1,20 @@
-import { useState } from "react";
-import UserForm from "./components/UserForm";  // Your existing form page
-import MatchingScreen from "./components/MatchingScreen";  // Your existing matching screen
-import ChatScreen from "./components/ChatScreen";  // New chat UI
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import UserForm from "./components/UserForm"; // User input form
+import MatchingScreen from "./components/MatchingScreen"; // Matching screen
+import ChatScreen from "./components/ChatScreen"; // Chat UI
 
 function App() {
-  const [screen, setScreen] = useState("form");
-
   return (
-    <>
-      {screen === "form" && <UserForm onSubmit={() => setScreen("matching")} />}  {/* Fixed here */}
-      {screen === "matching" && <MatchingScreen onMatchFound={() => setScreen("chat")} />}
-      {screen === "chat" && <ChatScreen />}
-    </>
+    <Routes>
+      {/* Route for the user input form (home page) */}
+      <Route path="/" element={<UserForm />} />
+      
+      {/* Route for the matching screen */}
+      <Route path="/matching" element={<MatchingScreen />} />
+      
+      {/* Route for the chat screen */}
+      <Route path="/chat" element={<ChatScreen />} />
+    </Routes>
   );
 }
 

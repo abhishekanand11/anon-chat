@@ -1,7 +1,9 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { FaMars, FaVenus, FaTransgender, FaTimes } from "react-icons/fa";
 
-const UserForm = ({ onSubmit }) => {
+const UserForm = () => {
+  const navigate = useNavigate(); // ✅ Use React Router for navigation
   const currentYear = new Date().getFullYear();
   const birthYears = Array.from({ length: 100 }, (_, i) => currentYear - i);
 
@@ -30,14 +32,10 @@ const UserForm = ({ onSubmit }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (onSubmit) {
-      onSubmit();  // Use onSubmit instead of props.onStartMatching
-    } else {
-      console.error("onSubmit is not provided to UserForm");
+    if (user.name && user.birthYear && user.genderFilter) {
+      navigate("/matching"); // ✅ Navigate to Matching Screen after submission
     }
   };
-  
-  
 
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-gradient-to-br from-blue-900 via-indigo-800 to-purple-900 px-4">
@@ -120,16 +118,17 @@ const UserForm = ({ onSubmit }) => {
         </div>
 
         {/* Submit Button */}
-              <button
-                  type="submit"
-                  className={`w-full p-3 rounded-lg font-medium transition-all ${user.name && user.birthYear && user.genderFilter
-                          ? "bg-white/20 text-white hover:bg-white/30"
-                          : "bg-white/10 text-gray-400 cursor-not-allowed"
-                      }`}
-                  disabled={!user.name || !user.birthYear || !user.genderFilter}
-              >
-                  Start Chatting
-              </button>
+        <button
+          type="submit"
+          className={`w-full p-3 rounded-lg font-medium transition-all ${
+            user.name && user.birthYear && user.genderFilter
+              ? "bg-white/20 text-white hover:bg-white/30"
+              : "bg-white/10 text-gray-400 cursor-not-allowed"
+          }`}
+          disabled={!user.name || !user.birthYear || !user.genderFilter}
+        >
+          Start Chatting
+        </button>
       </form>
     </div>
   );
