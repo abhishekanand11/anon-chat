@@ -84,7 +84,11 @@ const ChatScreen = () => {
   }, [messages]);
 
   const sendMessage = () => {
-    if (input.trim() === "" || !stompClientRef.current || !stompClientRef.current.connected) {
+    if (input.trim() === "") {
+        console.error("No valid input");
+        return;
+    }
+    if (!stompClientRef.current || !stompClientRef.current.connected) {
       console.error("WebSocket is not connected yet.");
       return;
     }
