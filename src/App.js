@@ -5,16 +5,11 @@ import ChatScreen from "./components/ChatScreen"; // Chat UI
 
 function App() {
   return (
-    <Routes>
-      {/* Route for the user input form (home page) */}
-      <Route path="/" element={<UserForm />} />
-      
-      {/* Route for the matching screen */}
-      <Route path="/matching" element={<MatchingScreen />} />
-      
-      {/* Route for the chat screen */}
-      <Route path="/chat" element={<ChatScreen />} />
-    </Routes>
+      <Routes>
+        <Route path="/" element={<UserForm />} />
+        <Route path="/matching" element={<MatchingScreen />} />
+        <Route path="/chat" element={<ChatScreen />} />
+      </Routes>
   );
 }
 
