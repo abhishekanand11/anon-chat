@@ -13,7 +13,7 @@ const ChatScreen = () => {
   
   // Extract chatId, user, and recipient from location.state
   const chatData = location.state || JSON.parse(localStorage.getItem("chatData")) || {};
-  const { chatId, user, recipient } = chatData;
+  const { chatSessionId, user, recipient } = chatData;
 
   // Function to check if page was reloaded
   const isPageReloaded = () => {
@@ -21,22 +21,22 @@ const ChatScreen = () => {
     return entries.length > 0 && entries[0].type === "reload";
   };
 
-  // 🔹 Redirect if chatId, user, or recipient is missing
+  // 🔹 Redirect if chatSessionId, user, or recipient is missing
   useEffect(() => {
-    if (!chatId || !user?.id || !recipient?.id) {
-      console.warn("Chat ID, user, or recipient missing! Redirecting...");
+    if (!chatSessionId || !user?.userId || !recipient?.userId) {
+      console.warn("Chat Session ID, user, or recipient missing! Redirecting...");
       navigate("/");  // ✅ Now handled inside useEffect
     } else {
         // Save to localStorage
         localStorage.setItem("chatData", JSON.stringify(chatData));
       }
-  }, [chatId, user, recipient, navigate]);
+  }, [chatSessionId, user, recipient, navigate, chatData]);
 
   useEffect(() => {
-    if (chatId && isPageReloaded()) {
-        console.log("Fetching past messages for chat:", chatId);
+    if (chatSessionId && isPageReloaded()) {
+        console.log("Fetching past messages for chat:", chatSessionId);
 
-        fetch(`http://localhost:8080/chat/messages/${chatId}`)
+        fetch(`http://localhost:8080/chat/messages/${chatSessionId}`)
             .then(response => response.json())
             .then(data => {
                 console.log("📜 Loaded previous messages:", data);
@@ -44,11 +44,11 @@ const ChatScreen = () => {
             })
             .catch(error => console.error("❌ Error fetching messages:", error));
     }
-  }, [chatId]);
+  }, [chatSessionId]);
 
   // Initialize WebSocket connection only if chatId, user, and recipient exist
   useEffect(() => {
-    if (!chatId) return;
+    if (!chatSessionId) return;
 
     const client = new Client({
       brokerURL: "ws://localhost:8080/ws-chat",
@@ -57,11 +57,34 @@ const ChatScreen = () => {
 
       onConnect: () => {
         console.log("✅ Connected to WebSocket");
-        client.subscribe(`/user/queue/chat.${chatId}`, (message) => {
-          console.log("📩 Received Message:", message.body);
+
+        if (chatSessionId && user && user.userId) {
+          const addUserMessage = {
+            chatSessionId: chatSessionId,
+            senderId: user.userId,
+            type: 'JOIN' // You can add a type to distinguish join messages if needed
+          };
+          console.log("⬆️ Sending addUser message:", addUserMessage); // Log addUser message being sent
+          client.publish({
+            destination: "/app/chat.addUser",
+            body: JSON.stringify(addUserMessage),
+          });
+        } else {
+          console.warn("addUser message not sent: chatSessionId or user info missing.");
+        }
+
+        // 📝 ADD THESE LOGS BEFORE SUBSCRIBE
+        console.log("🔌 WebSocket Connected Status before subscribe:", stompClientRef.current.connected);
+        console.log("Subscribing to topic:", `/user/${user.userId}/queue/chat.${chatSessionId}`);
+
+        client.subscribe(`/user/${user.userId}/queue/chat.${chatSessionId}`, (message) => {
+          console.log("📩 Received Message:", message);
           const receivedMessage = JSON.parse(message.body);
           setMessages((prevMessages) => [...prevMessages, receivedMessage]);
         });
+
+        // 📝 ADD THIS LOG AFTER SUBSCRIBE (immediate log - subscription is asynchronous)
+        console.log("Subscribed to topic:", `/user/${user.userId}/queue/chat.${chatSessionId}`);
       },
 
       onStompError: (frame) => {
@@ -77,7 +100,7 @@ const ChatScreen = () => {
     stompClientRef.current = client;
 
     return () => client.deactivate();
-  }, [chatId]);
+  }, [chatSessionId, user]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -93,22 +116,27 @@ const ChatScreen = () => {
       return;
     }
 
-    if (!chatId || !user || !recipient) {
+    if (!chatSessionId || !user || !recipient) {
         console.error("Chat ID, sender, or recipient is missing.");
         return;
       }
+    
 
     const message = {
-      chatId,
-      sender: user.id,
-      recipient: recipient.id,
-      content: input,
+        chatSessionId,
+        senderId: user.userId,
+        recipientId: recipient.userId,
+        content: input,
     };
 
     setMessages([...messages, message]);
 
+        // 📝 ADD THESE LOGS RIGHT BEFORE PUBLISH
+    console.log("sendMessage() called - about to publish message:", message);
+    console.log("stompClientRef.current.connected:", stompClientRef.current.connected);
+
     stompClientRef.current.publish({
-      destination: "/app/sendMessage",
+      destination: "/app/chat.sendMessage",
       body: JSON.stringify(message),
     });
 
@@ -119,7 +147,7 @@ const ChatScreen = () => {
 
   return (
     <div>
-      <h2>Chat Room - {chatId}</h2>
+      <h2>Chat Room - {chatSessionId}</h2>
       <p>Chatting with {recipient?.name}</p>
       <div className="flex flex-col h-screen bg-gradient-to-br from-blue-900 via-indigo-800 to-purple-900 p-4">
         <div className="flex-1 overflow-y-auto space-y-2 p-2">
@@ -127,7 +155,7 @@ const ChatScreen = () => {
             <div
               key={index}
               className={`max-w-fit px-4 py-2 rounded-lg text-white break-words ${
-                msg.sender === user?.id ? "bg-blue-500 self-end" : "bg-gray-600 self-start"
+                msg.senderId === user?.userId ? "bg-blue-500 self-end" : "bg-gray-600 self-start"
               }`}
             >
               {msg.content}

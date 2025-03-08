@@ -22,50 +22,47 @@ const MatchingScreen = () => {
         return () => clearTimeout(timer); // Cleanup timer on unmount
     }, []);
 
-    const handleMatchSuccess = async () => {
-        try {
-          let matched = false;
-          console.log("Sending match request for user:", currentUser);
-      
-          while (!matched) {
-            const userPayload = {
-                id: currentUser.id,  // Ensure ID is correct
-                name: currentUser.name,
-                age: currentUser.age || 25,  // Default age if missing
-                interests: currentUser.interests || [],  // Ensure array
-                genderPreference: currentUser.genderPreference || "Any",
-                region: currentUser.region || "Unknown"
-            };
+// In MatchingScreen.js, handleMatchSuccess function:
 
-            console.log("Formatted user payload:", userPayload);
+const handleMatchSuccess = async () => {
+    try {
+      let matched = false;
+      console.log("Sending match request for user:", currentUser);
 
-            const response = await fetch("http://localhost:8080/chat/match", { 
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ user: userPayload }),
-            });
-      
-            if (!response.ok) throw new Error("Failed to fetch match details");
-      
-            const matchData = await response.json();
-      
-            if (!matchData.matchFound) {
-              console.log("Waiting for a match...");
-              await new Promise(resolve => setTimeout(resolve, 3000)); // Wait before retrying
-              continue;
-            }
-      
-            // If match is found
-            const { chatId, user1, user2 } = matchData;
-            const matchedUser = user1.id === currentUser.id ? user2 : user1;
-      
-            matched = true;
-            navigate("/chat", { state: { chatId, user: currentUser, recipient: matchedUser } });
-          }
-        } catch (error) {
-          console.error("Error fetching match:", error);
+      while (!matched) {
+        const userId = currentUser.userId
+        console.log("Formatted user id:", userId);
+
+        // Changed to GET and /chat/getMatch with userId as query parameter
+        const response = await fetch(`http://localhost:8080/chat/getMatch?userId=${userId}`, {
+            method: "GET", // Changed to GET
+            headers: { "Content-Type": "application/json" }, // GET request typically doesn't need Content-Type in headers
+        });
+
+
+        if (!response.ok) throw new Error("Failed to fetch match details");
+
+        const matchData = await response.json();
+
+        if (!matchData.matchFound) {
+          console.log("Waiting for a match...");
+          await new Promise(resolve => setTimeout(resolve, 3000)); // Wait before retrying
+          continue;
         }
-      };      
+
+        // If match is found
+        const { chatSessionId, user1, user2, matchFound } = matchData;
+        const matchedUser = user1.userId === currentUser.userId ? user2 : user1;
+
+        console.log("Match found user: ", currentUser, " rceipient: ", matchedUser, " sessionId: ", chatSessionId);
+
+        matched = true;
+        navigate("/chat", { state: { chatSessionId, user: currentUser, recipient: matchedUser } });
+      }
+    } catch (error) {
+      console.error("Error fetching match:", error);
+    }
+  };      
 
 
     return (
