@@ -58,20 +58,20 @@ const ChatScreen = () => {
       onConnect: () => {
         console.log("✅ Connected to WebSocket");
 
-        if (chatSessionId && user && user.userId) {
-          const addUserMessage = {
-            chatSessionId: chatSessionId,
-            senderId: user.userId,
-            type: 'JOIN' // You can add a type to distinguish join messages if needed
-          };
-          console.log("⬆️ Sending addUser message:", addUserMessage); // Log addUser message being sent
-          client.publish({
-            destination: "/app/chat.addUser",
-            body: JSON.stringify(addUserMessage),
-          });
-        } else {
-          console.warn("addUser message not sent: chatSessionId or user info missing.");
-        }
+        // if (chatSessionId && user && user.userId) {
+        //   const addUserMessage = {
+        //     chatSessionId: chatSessionId,
+        //     senderId: user.userId,
+        //     type: 'JOIN' // You can add a type to distinguish join messages if needed
+        //   };
+        //   console.log("⬆️ Sending addUser message:", addUserMessage); // Log addUser message being sent
+        //   client.publish({
+        //     destination: "/app/chat.addUser",
+        //     body: JSON.stringify(addUserMessage),
+        //   });
+        // } else {
+        //   console.warn("addUser message not sent: chatSessionId or user info missing.");
+        // }
 
         // 📝 ADD THESE LOGS BEFORE SUBSCRIBE
         console.log("🔌 WebSocket Connected Status before subscribe:", stompClientRef.current.connected);
