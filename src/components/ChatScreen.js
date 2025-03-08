@@ -58,32 +58,11 @@ const ChatScreen = () => {
       onConnect: () => {
         console.log("✅ Connected to WebSocket");
 
-        // if (chatSessionId && user && user.userId) {
-        //   const addUserMessage = {
-        //     chatSessionId: chatSessionId,
-        //     senderId: user.userId,
-        //     type: 'JOIN' // You can add a type to distinguish join messages if needed
-        //   };
-        //   console.log("⬆️ Sending addUser message:", addUserMessage); // Log addUser message being sent
-        //   client.publish({
-        //     destination: "/app/chat.addUser",
-        //     body: JSON.stringify(addUserMessage),
-        //   });
-        // } else {
-        //   console.warn("addUser message not sent: chatSessionId or user info missing.");
-        // }
-
-        // 📝 ADD THESE LOGS BEFORE SUBSCRIBE
-        console.log("🔌 WebSocket Connected Status before subscribe:", stompClientRef.current.connected);
-        console.log("Subscribing to topic:", `/user/${user.userId}/queue/chat.${chatSessionId}`);
-
         client.subscribe(`/user/${user.userId}/queue/chat.${chatSessionId}`, (message) => {
           console.log("📩 Received Message:", message);
           const receivedMessage = JSON.parse(message.body);
           setMessages((prevMessages) => [...prevMessages, receivedMessage]);
         });
-
-        // 📝 ADD THIS LOG AFTER SUBSCRIBE (immediate log - subscription is asynchronous)
         console.log("Subscribed to topic:", `/user/${user.userId}/queue/chat.${chatSessionId}`);
       },
 
@@ -145,43 +124,46 @@ const ChatScreen = () => {
 
   // ✅ No need for an early return here since the redirect is handled in useEffect
 
-  return (
-    <div>
-      <h2>Chat Room - {chatSessionId}</h2>
-      <p>Chatting with {recipient?.name}</p>
-      <div className="flex flex-col h-screen bg-gradient-to-br from-blue-900 via-indigo-800 to-purple-900 p-4">
-        <div className="flex-1 overflow-y-auto space-y-2 p-2">
-          {messages.map((msg, index) => (
-            <div
-              key={index}
-              className={`max-w-fit px-4 py-2 rounded-lg text-white break-words ${
-                msg.senderId === user?.userId ? "bg-blue-500 self-end" : "bg-gray-600 self-start"
-              }`}
-            >
-              {msg.content}
+    return (
+        <div>
+            <h2>Chat Room - {chatSessionId}</h2>
+            <p>Chatting with {recipient?.name}</p>
+            <div className="flex flex-col h-screen bg-gradient-to-br from-blue-900 via-indigo-800 to-purple-900 p-4">
+                <div className="flex-1 overflow-y-auto space-y-2 p-2">
+                    {messages.map((msg, index) => (
+                        <div
+                            key={index}
+                            className={`flex ${msg.senderId === user?.userId ? "justify-end" : "justify-start"}`}
+                        >
+                            <div
+                                className={`max-w-xs px-4 py-2 rounded-lg text-white break-words ${msg.senderId === user?.userId ? "bg-blue-500 ml-auto" : "bg-gray-600 mr-auto"
+                                    }`}
+                            >
+                                {msg.content}
+                            </div>
+                        </div>
+                    ))}
+                    <div ref={chatEndRef} />
+                </div>
+                <div className="flex items-center p-2 bg-white/10 rounded-lg">
+                    <input
+                        type="text"
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+                        placeholder="Type a message..."
+                        className="flex-1 p-2 bg-transparent text-white focus:outline-none"
+                    />
+                    <button
+                        onClick={sendMessage}
+                        className="ml-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                    >
+                        Send
+                    </button>
+                </div>
             </div>
-          ))}
-          <div ref={chatEndRef} />
         </div>
-        <div className="flex items-center p-2 bg-white/10 rounded-lg">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-            placeholder="Type a message..."
-            className="flex-1 p-2 bg-transparent text-white focus:outline-none"
-          />
-          <button
-            onClick={sendMessage}
-            className="ml-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-          >
-            Send
-          </button>
-        </div>
-      </div>
-    </div>
-  );
+    );
 };
 
 export default ChatScreen;
